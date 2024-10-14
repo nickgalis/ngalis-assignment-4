@@ -22,12 +22,14 @@ jobs:
     - name: Install dependencies
       run: make install
     
-    - name: Start server
+    - name: Run server
+      shell: pwsh
       run: |
-        powershell Start-Process -NoNewWindow -FilePath make -ArgumentList run
+        Start-Process -NoNewWindow -FilePath make -ArgumentList run
         
-    - name: Wait for the server to start
-      run: timeout /t 15
+    - name: Wait for server to start
+      shell: pwsh
+      run: Start-Sleep -Seconds 15
 
     - name: Check server is running (optional)
       run: curl http://localhost:3000
