@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@v4
@@ -20,25 +20,21 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: "3.10"
-
-    - name: Install dependencies
+    
+    - name: Install MSYS2 and make
       run: |
-        python -m pip install --upgrade pip
-        sudo apt-get update
-        sudo apt-get install -y make
-        # Create virtual environment and install dependencies with a Unix-friendly path
-        python -m venv venv
-        source venv/bin/activate && pip install -r requirements.txt
+        choco install -y make
+        
+    - name: Install dependencies
+      run: make install
 
     - name: Run server
       run: |
-        # Source the virtual environment and run the server
-        source venv/bin/activate
         make run &
         # Wait for the server to start
-        sleep 10
+        timeout /T 10
 
     - name: Check server is running (optional)
       run: |
-        # Optional step to ensure server is running, replace this with actual tests if needed
-        curl http://0.0.0.0:3000
+        # Optional step to ensure server is running, replace with actual tests if needed
+        curl http://localhost:3000
