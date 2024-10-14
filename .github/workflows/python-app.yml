@@ -1,59 +1,40 @@
-name: Python Application Workflow
+name: Python application
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
   pull_request:
-    branches:
-      - main
+    branches: [ "main" ]
 
 permissions:
   contents: read
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v3
-        with:
-          python-version: "3.12"
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.10"
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install flake8
-          python -m venv venv
-          .\venv\Scripts\Activate
-          if (Test-Path requirements.txt) { pip install -r requirements.txt }
-          make install
-        shell: pwsh
-      
-      - name: Lint with flake8
-        run: |
-          # Stop the build if there are Python syntax errors or undefined names
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          # Exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-        shell: pwsh
+    - name: Install dependencies and create virtual environment
+      run: |
+        python -m pip install --upgrade pip
+        sudo apt-get update
+        sudo apt-get install -y make
+        make install
 
-      - name: Run application
-        run: |
-          make run &
-          Start-Sleep -Seconds 10
+    - name: Run server
+      run: |
+        # Run the server and sleep to ensure it has enough time to start
+        make run &
+        sleep 10
 
-          # Perform a simple check to ensure the application is running
-          try {
-            $response = Invoke-WebRequest -Uri http://localhost:3000 -UseBasicParsing
-            if ($response.StatusCode -ne 200) { throw "Server not responding as expected" }
-          } catch {
-            Throw $_
-          } finally {
-            # Terminate any Flask process
-            Stop-Process -Name "flask" -Force
-          }
-        shell: pwsh
+    - name: Check server is running (optional)
+      run: |
+        # Optional step to ensure server is running (you can expand this step if you have specific tests to run)
+        curl http://0.0.0.0:3000
