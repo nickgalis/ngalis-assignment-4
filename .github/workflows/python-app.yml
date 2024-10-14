@@ -21,4 +21,5 @@ jobs:
     - name: Run server
       run: |
         make run
+        curl http://localhost:3000
       shell: cmd
