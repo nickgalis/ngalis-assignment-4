@@ -18,12 +18,14 @@ jobs:
     - name: Install dependencies
       run: make install
 
-    - name: Run application
+    - name: Run server
       run: |
-        Start-Job -ScriptBlock { make run }
-        Start-Sleep -Seconds 20
+        make run
+        Start-Sleep -Seconds 15
+
     - name: Connect
       run:
-        Invoke-WebRequest -Uri https://localhost:3000/
-        
-      shell: pwsh
+        curl http://localhost:3000
+      shell: cmd
+
+      
