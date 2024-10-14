@@ -29,8 +29,11 @@ jobs:
       run: make install
 
     - name: Run application
+      id: run_application
       run: |
         make run &
+        $job = Get-Job | Where-Object { $_.Command -eq 'make run' }
+        $jobId = $job.Id
         Start-Sleep -Seconds 10
 
         # Perform a simple check to ensure the application is running
@@ -40,7 +43,8 @@ jobs:
         } catch {
           Throw $_
         } finally {
-          # Terminate any Flask process
-          Stop-Process -Name "flask" -Force
+          # Terminate the Flask process
+          Stop-Job -Id $jobId
+          Remove-Job -Id $jobId
         }
       shell: pwsh
