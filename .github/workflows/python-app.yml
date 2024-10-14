@@ -5,7 +5,7 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: windows-latest
-    
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
@@ -14,13 +14,13 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: '3.12'
-        
+
     - name: Install dependencies
       run: make install
 
     - name: Run server
       run: |
-        Start-Process cmd -ArgumentList '/c make run' -NoNewWindow
+        Start-Process cmd -ArgumentList '/c make run' -NoNewWindow -PassThru | Out-File process_id.txt
       shell: pwsh
 
     - name: Wait for server to start
@@ -29,11 +29,16 @@ jobs:
 
     - name: Test server is running
       run: |
-        $response = Invoke-WebRequest http://localhost:3000
-        if ($response.StatusCode -ne 200) {
-          Write-Host "Server did not start correctly."
+        try {
+          $response = Invoke-WebRequest http://localhost:3000
+          if ($response.StatusCode -eq 200) {
+            Write-Host "Server is running correctly."
+          } else {
+            Write-Host "Server did not start correctly."
+            exit 1
+          }
+        } catch {
+          Write-Host "Server did not start correctly. Detailed Error: $_"
           exit 1
-        } else {
-          Write-Host "Server is running correctly."
         }
       shell: pwsh
