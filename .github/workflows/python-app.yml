@@ -25,7 +25,7 @@ jobs:
 
     - name: Connect
       run:
-        curl http://localhost:3000
+        wget http://localhost:3000
       shell: cmd
 
       
