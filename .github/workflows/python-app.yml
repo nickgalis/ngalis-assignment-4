@@ -27,7 +27,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install flake8
-          if (Test-Path requirements.txt) { pip install -r requirements.txt }
           make install
         shell: pwsh
       
@@ -41,9 +40,11 @@ jobs:
 
       - name: Run application
         run: |
-          make run &
-          Start-Sleep -Seconds 10
+          Start-Job -ScriptBlock { make run }
+          Start-Sleep -Seconds 20
 
-          Invoke-WebRequest -Uri http://localhost:3000 -UseBasicParsing
-          
+          $response = Invoke-WebRequest -Uri http://localhost:3000 -UseBasicParsing
+          if ($response.StatusCode -ne 200) {
+            Write-Error "Flask application did not start correctly."
+          }
         shell: pwsh
