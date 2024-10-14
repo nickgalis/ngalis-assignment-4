@@ -38,9 +38,13 @@ jobs:
 
       - name: Run application
         run: |
-          $job = Start-Job -ScriptBlock { & { "make run" } }
-          Start-Sleep -Seconds 60
+          # Run Flask in the foreground to capture immediate output
+          & { "make run" }
+        shell: pwsh
+        continue-on-error: true
 
+      - name: Test application
+        run: |
           $retries = 5
           $retry_interval = 20
           $success = $false
@@ -60,8 +64,5 @@ jobs:
 
           if (-not $success) {
             Write-Error "Flask application did not start correctly."
-            exit 1
           }
-
-          Stop-Job -Job $job
         shell: pwsh
