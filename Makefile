@@ -1,6 +1,6 @@
 install:
 	python -m venv venv
-	venv\Scripts\activate && pip install -r requirements.txt
+	venv\Scripts\python -m pip install -r requirements.txt
 
 run:
-	venv\Scripts\activate && flask run --host=0.0.0.0 --port=3000
+	venv\Scripts\python -m flask run --host=0.0.0.0 --port=3000
