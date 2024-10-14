@@ -21,31 +21,13 @@ jobs:
 
     - name: Install dependencies
       run: make install
-
-    - name: Run server
-      shell: pwsh
+    
+    - name: Start server
       run: |
-        Start-Job -ScriptBlock { make run }
+        powershell Start-Process -NoNewWindow -FilePath make -ArgumentList run
         
-    - name: Wait for server to start
-      shell: pwsh
-      run: |
-        $maxRetries = 10
-        $retryInterval = 3
-        for ($i = 0; $i -lt $maxRetries; $i++) {
-          try {
-            $response = Invoke-WebRequest http://localhost:3000 -UseBasicParsing
-            if ($response.StatusCode -eq 200) {
-              Write-Output "Server is up and running."
-              break
-            }
-          } catch {
-            Start-Sleep -Seconds $retryInterval
-          }
-        }
-        if ($i -eq $maxRetries) {
-          throw "Server did not start within expected time."
-        }
-      
+    - name: Wait for the server to start
+      run: timeout /t 15
+
     - name: Check server is running (optional)
       run: curl http://localhost:3000
