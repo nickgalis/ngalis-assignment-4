@@ -18,9 +18,13 @@ jobs:
     - name: Install dependencies
       run: make install
 
-    - name: Run server
+    - name: Run application
       run: |
-        make run
-        Start-Sleep -Seconds 15
-        curl http://localhost:3000
-      shell: cmd
+        Start-Job -ScriptBlock { make run }
+        Start-Sleep -Seconds 20
+
+        $response = Invoke-WebRequest -Uri http://localhost:3000 -UseBasicParsing
+        if ($response.StatusCode -ne 200) {
+          Write-Error "Flask application did not start correctly."
+        }
+      shell: pwsh
