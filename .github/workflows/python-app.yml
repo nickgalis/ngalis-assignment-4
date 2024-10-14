@@ -22,8 +22,7 @@ jobs:
         python-version: "3.12"
     
     - name: Install MSYS2 and make
-      run: |
-        choco install -y make
+      run: choco install -y make
         
     - name: Install dependencies
       run: make install
@@ -31,20 +30,42 @@ jobs:
     - name: Run application
       id: run_application
       run: |
-        make run &
-        $job = Get-Job | Where-Object { $_.Command -eq 'make run' }
-        $jobId = $job.Id
+        # Start the Flask application in the background
+        Start-Job -ScriptBlock {
+          make run
+        } -Name flaskJob
+        
+        # Wait for the Flask server to start
         Start-Sleep -Seconds 10
 
-        # Perform a simple check to ensure the application is running
+        # Fetch the job's output for debugging purposes
+        $job = Get-Job -Name flaskJob
+        $jobOutput = Receive-Job -Job $job
+
+        Write-Output "Background job output:"
+        Write-Output $jobOutput
+        
+        # Check if server is running
         try {
           $response = Invoke-WebRequest -Uri http://localhost:3000 -UseBasicParsing
-          if ($response.StatusCode -ne 200) { throw "Server not responding as expected" }
+          if ($response.StatusCode -ne 200) { 
+            Write-Output "Server not responding as expected"
+            throw "Server not responding as expected" 
+          }
         } catch {
+          Write-Output "Invoke-WebRequest failed with exception: $_"
           Throw $_
         } finally {
-          # Terminate the Flask process
-          Stop-Job -Id $jobId
-          Remove-Job -Id $jobId
+          # Stop the Flask process
+          Stop-Job -Name flaskJob
+          Remove-Job -Name flaskJob
         }
+      shell: pwsh
+
+    - name: Show running processes for debug
+      run: Get-Process
+      shell: pwsh
+
+    - name: Show listening ports for debug
+      run: netstat -an
       shell: pwsh
