@@ -20,8 +20,8 @@ jobs:
 
     - name: Run server
       run: |
-        make run
-        Start-Sleep -Seconds 15
+          Start-Job -ScriptBlock { make run }
+          Start-Sleep -Seconds 20
 
     - name: Connect
       run:
