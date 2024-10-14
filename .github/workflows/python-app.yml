@@ -24,11 +24,28 @@ jobs:
 
     - name: Run server
       shell: pwsh
-      run: Start-Process -NoNewWindow -FilePath make -ArgumentList run
-
+      run: |
+        Start-Job -ScriptBlock { make run }
+        
     - name: Wait for server to start
       shell: pwsh
-      run: Start-Sleep -Seconds 15
-
+      run: |
+        $maxRetries = 10
+        $retryInterval = 3
+        for ($i = 0; $i -lt $maxRetries; $i++) {
+          try {
+            $response = Invoke-WebRequest http://localhost:3000 -UseBasicParsing
+            if ($response.StatusCode -eq 200) {
+              Write-Output "Server is up and running."
+              break
+            }
+          } catch {
+            Start-Sleep -Seconds $retryInterval
+          }
+        }
+        if ($i -eq $maxRetries) {
+          throw "Server did not start within expected time."
+        }
+      
     - name: Check server is running (optional)
       run: curl http://localhost:3000
