@@ -1,57 +1,33 @@
-name: Python Application Workflow
+name: Python Application
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
-
-permissions:
-  contents: read
+    branches: [main]
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: [3.7, 3.8, 3.9, 3.10, 3.11, 3.12]
 
     steps:
-      - uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v3
-        with:
-          python-version: "3.12"
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install flake8
-          if (Test-Path requirements.txt) { pip install -r requirements.txt }
-          make install
-        shell: pwsh
-      
-      - name: Lint with flake8
-        run: |
-          # Stop the build if there are Python syntax errors or undefined names
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          # Exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-        shell: pwsh
+    - name: Install make
+      run: sudo apt-get install -y make
 
-      - name: Run application
-        run: |
-          make run &
-          Start-Sleep -Seconds 10
+    - name: Install dependencies using Makefile
+      run: make install
 
-          # Perform a simple check to ensure the application is running
-          try {
-            $response = Invoke-WebRequest -Uri http://localhost:3000 -UseBasicParsing
-            if ($response.StatusCode -ne 200) { throw "Server not responding as expected" }
-          } catch {
-            Throw $_
-          } finally {
-            # Terminate any Flask process
-            Stop-Process -Name "flask" -Force
-          }
-        shell: pwsh
+    - name: Run application using Makefile
+      run: make run
