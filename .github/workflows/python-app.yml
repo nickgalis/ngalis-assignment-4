@@ -25,7 +25,7 @@ jobs:
 
     - name: Connect
       run:
-        wget http://localhost:3000/
+        Invoke-WebRequest -Uri http://localhost:3000/
       shell: cmd
 
       
