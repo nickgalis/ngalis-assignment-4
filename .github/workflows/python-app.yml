@@ -31,8 +31,7 @@ jobs:
     - name: Run server
       run: |
         make run &
-        # Wait for the server to start
-        timeout /T 10
+        Start-Sleep -Seconds 10
 
     - name: Check server is running (optional)
       run: |
