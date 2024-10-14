@@ -20,7 +20,58 @@ jobs:
 
     - name: Run server
       run: |
-        Start-Process cmd -ArgumentList '/c make run' -NoNewWindow -PassThru | Out-File process_id.txt
+        Start-Process cmd -ArgumentList '/c make run' -NoNewWindow -PassThru | Oname: CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: make install
+
+    - name: Run server
+      run: |
+        # Start the server in a detached screen session
+        Start-Process -FilePath "cmd.exe" -ArgumentList "/c make run" -PassThru
+      shell: pwsh
+
+    - name: Wait for server to start
+      run: Start-Sleep -Seconds 20
+      shell: pwsh
+
+    - name: Test server is running
+      run: |
+        try {
+          $response = Invoke-WebRequest http://localhost:3000
+          if ($response.StatusCode -eq 200) {
+            Write-Host "Server is running correctly."
+          } else {
+            Write-Host "Server did not start correctly. Status code: $($response.StatusCode)"
+            exit 1
+          }
+        } catch {
+          Write-Host "Server did not start correctly. Detailed Error: $_"
+          exit 1
+        }
+      shell: pwsh
+
+    - name: Print logs for diagnostic
+      if: failure()
+      run: |
+        Get-Content process_id.txt
+        Get-EventLog -LogName Application -Newest 10 | Format-List
+      shell: pwshut-File process_id.txt
       shell: pwsh
 
     - name: Wait for server to start
