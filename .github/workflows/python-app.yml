@@ -24,7 +24,8 @@ jobs:
           Start-Sleep -Seconds 20
 
     - name: Connect
-      run: Invoke-WebRequest -Uri http://localhost:3000/
+      run: 
+        curl http://localhost:3000/
       shell: cmd
 
       
