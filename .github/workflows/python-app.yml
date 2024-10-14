@@ -1,33 +1,40 @@
-name: Python Application
+name: Python application
 
 on:
   push:
-    branches: [main]
+    branches: [ "main" ]
   pull_request:
-    branches: [main]
+    branches: [ "main" ]
+
+permissions:
+  contents: read
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        python-version: [3.7, 3.8, 3.9, 3.10, 3.11, 3.12]
+    runs-on: windows-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v3
       with:
-        python-version: ${{ matrix.python-version }}
-
-    - name: Install make
-      run: sudo apt-get install -y make
-
-    - name: Install dependencies using Makefile
+        python-version: "3.12"
+    
+    - name: Install MSYS2 and make
+      run: |
+        choco install -y make
+        
+    - name: Install dependencies
       run: make install
 
-    - name: Run application using Makefile
-      run: make run
+    - name: Run server
+      run: |
+        make run &
+        # Wait for the server to start
+        timeout /T 10
+
+    - name: Check server is running (optional)
+      run: |
+        # Optional step to ensure server is running, replace with actual tests if needed
+        curl http://localhost:3000
